@@ -116,9 +116,14 @@
   .steps b { display: block; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 6px; }
   .steps .n { font-family: var(--serif); font-size: 34px; font-weight: 800; line-height: 1; display: block; margin-bottom: 12px; }
   .steps p { margin: 0; color: #555; }
-  footer { border-top: 1px solid var(--line); padding: 28px 20px 40px; text-align: center; font-size: 12px; color: var(--muted); }
-  footer p { margin: 4px 0; }
-  footer .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+  footer { border-top: 1px solid var(--line); padding: 30px 20px 40px; display: flex; align-items: center; justify-content: center; gap: 28px; font-size: 12px; color: var(--muted); }
+  footer .col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  footer .logo { border: 1px solid var(--line); border-radius: 18px; padding: 8px; transition: border-color .15s; }
+  footer .logo:hover { border-color: var(--ink); }
+  footer .logo img { display: block; width: 72px; height: 72px; }
+  footer .built { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); }
+  footer .explorer { border: 1px solid var(--ink); border-radius: 999px; padding: 8px 18px; color: var(--ink); font-weight: 600; text-decoration: none; transition: background .15s, color .15s; }
+  footer .explorer:hover { background: var(--ink); color: #fff; }
 
   /* ---------- saved looks drawer ---------- */
   .side-tab { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 15; background: var(--ink); color: #fff; writing-mode: vertical-rl; font-size: 10px; font-weight: 700; letter-spacing: .18em; padding: 16px 9px; }
@@ -263,8 +268,14 @@
 </section>
 
 <footer>
-  <p id="foot-contract"></p>
-  <p>For fun and inspiration. No payments, no tokens, no personal data.</p>
+  <div class="col">
+    <a class="logo" href="https://scan.botchain.ai/" target="_blank" rel="noopener" aria-label="BOT Chain explorer"><img src="images/bot-chain.png" alt="BOT Chain" width="72" height="72" loading="lazy"></a>
+    <span class="built">Built on</span>
+  </div>
+  <div class="col">
+    <a class="explorer" id="foot-explorer" href="https://scan.botchain.ai/" target="_blank" rel="noopener">View on explorer</a>
+    <span id="foot-net"></span>
+  </div>
 </footer>
 
 <button class="side-tab" type="button" id="side-tab">SAVED LOOKS</button>
@@ -833,16 +844,14 @@
 
   // ---------- static chrome ----------
   function renderChrome() {
-    const where = `${NET.name}, chain ID ${NET.chainId}`;
+    $('foot-net').textContent = `(${NET.name}, chain ID ${NET.chainId})`;
     if (PREVIEW) {
       $('notice').hidden = false;
       $('notice').replaceChildren('Preview mode · contract not deployed yet, so looks are saved in this browser only', ...(isLocal ? [' · ', h('a', { href: 'deploy.html' }, 'Deploy the contract')] : []));
-      $('foot-contract').textContent = `Contract: not deployed yet (${where})`;
-      $('globe').href = NET.explorer;
+      $('globe').href = $('foot-explorer').href = NET.explorer;
     } else {
       const url = `${NET.explorer}/address/${NET.contract}`;
-      $('foot-contract').replaceChildren('Contract: ', h('a', { class: 'mono', href: url, target: '_blank', rel: 'noopener' }, NET.contract), ` (${where})`);
-      $('globe').href = url;
+      $('globe').href = $('foot-explorer').href = url;
       if (netKey === 'testnet') {
         $('notice').hidden = false;
         $('notice').textContent = 'Testnet · looks saved here are for testing only';
