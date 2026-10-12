@@ -1,0 +1,23 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/OutfitOracle.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\n/// @title OutfitOracle\n/// @notice Stores AI-styled looks (four wardrobe item ids plus the mood tags that produced them).\n///         No tokens, no payments, no admin, no personal data.\ncontract OutfitOracle {\n    struct Look {\n        address owner;\n        uint8 occasion; // 0 Work, 1 Date, 2 Brunch, 3 Party, 4 Travel, 5 Campus\n        uint8 weather; // 0 Hot, 1 Rainy, 2 Mild, 3 Cool\n        uint8 style; // 0 Minimal, 1 Romantic, 2 Street, 3 Vintage, 4 Sporty\n        uint16[4] items; // catalog ids: top, bottom, shoes, accessory\n        uint64 timestamp;\n    }\n\n    uint8 public constant OCCASION_COUNT = 6;\n    uint8 public constant WEATHER_COUNT = 4;\n    uint8 public constant STYLE_COUNT = 5;\n\n    Look[] public looks;\n    mapping(address => uint256[]) private _looksOf;\n\n    event LookSaved(uint256 indexed id, address indexed owner, uint16[4] items);\n\n    error InvalidOccasion();\n    error InvalidWeather();\n    error InvalidStyle();\n    error InvalidItem();\n    error LookNotFound();\n\n    function saveLook(uint8 occasion, uint8 weather, uint8 style, uint16[4] calldata items)\n        external\n        returns (uint256 id)\n    {\n        if (occasion >= OCCASION_COUNT) revert InvalidOccasion();\n        if (weather >= WEATHER_COUNT) revert InvalidWeather();\n        if (style >= STYLE_COUNT) revert InvalidStyle();\n        for (uint256 i = 0; i < 4; i++) {\n            if (items[i] == 0) revert InvalidItem();\n        }\n\n        id = looks.length;\n        looks.push(Look(msg.sender, occasion, weather, style, items, uint64(block.timestamp)));\n        _looksOf[msg.sender].push(id);\n        emit LookSaved(id, msg.sender, items);\n    }\n\n    function getLook(uint256 id) external view returns (Look memory) {\n        if (id >= looks.length) revert LookNotFound();\n        return looks[id];\n    }\n\n    function looksOf(address owner) external view returns (uint256[] memory) {\n        return _looksOf[owner];\n    }\n\n    function totalLooks() external view returns (uint256) {\n        return looks.length;\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "paris",
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode.object"
+        ]
+      }
+    }
+  }
+}

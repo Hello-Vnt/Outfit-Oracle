@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "outfitoracle",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4578"],
+      "port": 4578
+    }
+  ]
+}

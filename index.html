@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OutfitOracle — AI-styled looks, saved on BOT Chain</title>
+<meta name="description" content="Tell the Oracle the occasion, weather and your style. AI styles a full look from a curated wardrobe, and you save your favourites on BOT Chain.">
+<meta property="og:title" content="OutfitOracle">
+<meta property="og:description" content="AI-styled looks, saved on BOT Chain.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23111'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='40' font-weight='700' text-anchor='middle' fill='%23fff'%3EO%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #111111;
+    --muted: #8a8a8a;
+    --line: #e6e6e6;
+    --badge: #e53935;
+    --wash: #f6f6f6;
+    --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --serif: 'Playfair Display', 'Didot', 'Bodoni MT', Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+  a { color: inherit; }
+  [hidden] { display: none !important; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  /* ---------- header ---------- */
+  .announce { background: var(--ink); color: #fff; text-align: center; font-size: 11px; font-weight: 600; letter-spacing: .14em; padding: 9px 16px; }
+  .header { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; padding: 14px 32px; }
+  .nav { display: flex; gap: 26px; }
+  .nav button { font-size: 13px; font-weight: 500; padding: 6px 0; border-bottom: 1px solid transparent; }
+  .nav button:hover, .nav button[aria-current="page"] { border-bottom-color: var(--ink); }
+  .wordmark { font-family: var(--serif); font-weight: 900; font-size: 30px; letter-spacing: -.02em; line-height: 1; text-decoration: none; }
+  .tools { display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
+  .icon-btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; min-width: 38px; padding: 0 9px; border: 1px solid transparent; text-decoration: none; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .icon-btn:hover { border-color: var(--line); }
+  .icon-btn svg { width: 20px; height: 20px; flex: none; }
+  .wallet-btn { border-color: var(--ink); padding: 0 12px; }
+  .wallet-btn:hover { border-color: var(--ink); background: var(--ink); color: #fff; }
+  .wallet-btn.warn { background: var(--badge); border-color: var(--badge); color: #fff; }
+  .wallet-btn .label { display: inline-flex; align-items: center; gap: 6px; }
+  .wallet-btn .dot { width: 7px; height: 7px; border-radius: 50%; background: #2eaf62; }
+
+  .notice { background: var(--wash); border-bottom: 1px solid var(--line); text-align: center; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #555; padding: 8px 16px; }
+
+  /* ---------- hero ---------- */
+  .hero { position: relative; height: min(78vh, 800px); min-height: 440px; overflow: hidden; background: #dcb48c; }
+  .hero img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 26%; }
+  .hero::after { content: ''; position: absolute; inset: 45% 0 0; background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, .38)); }
+  .hero-copy { position: absolute; z-index: 1; left: 0; right: 0; bottom: 7%; padding: 0 16px; text-align: center; color: #fff; }
+  .hero-title { font-family: var(--serif); font-weight: 400; font-size: clamp(68px, 13.5vw, 200px); letter-spacing: -.055em; line-height: .86; text-transform: uppercase; margin: 0; }
+  .hero-btn { display: inline-block; margin-top: 22px; background: #fff; color: var(--ink); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; padding: 12px 26px; transition: background .15s, color .15s; }
+  .hero-btn:hover { background: var(--ink); color: #fff; }
+  .section-title { font-size: clamp(24px, 3.4vw, 34px); font-weight: 800; text-transform: uppercase; text-align: center; line-height: 1.05; margin: 64px 0 0; padding: 0 20px; scroll-margin-top: 96px; }
+
+  /* ---------- page ---------- */
+  .view { padding: 56px 0 72px; }
+  #view-mood { padding-top: 0; }
+  .page-title { font-size: clamp(34px, 6vw, 60px); font-weight: 800; letter-spacing: -.01em; text-transform: uppercase; text-align: center; line-height: 1.02; margin: 0; padding: 0 20px; }
+  .page-sub { text-align: center; color: var(--muted); margin: 14px auto 0; max-width: 520px; padding: 0 20px; }
+  .tag-line { display: flex; justify-content: center; margin-top: 14px; min-height: 22px; }
+  .classic { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); padding: 3px 9px; border-radius: 999px; }
+
+  .mood { max-width: 760px; margin: 36px auto 0; padding: 0 20px; }
+  .mood fieldset { border: 0; border-top: 1px solid var(--line); margin: 0; padding: 22px 0; display: grid; grid-template-columns: 110px 1fr; align-items: start; gap: 12px; }
+  .mood legend { float: left; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; padding: 10px 0 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 9px 18px; font-size: 13px; font-weight: 500; transition: border-color .15s, background .15s, color .15s; }
+  .chip:hover { border-color: var(--ink); }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .mood-go { border-top: 1px solid var(--line); padding-top: 30px; text-align: center; }
+  .hint { color: var(--muted); font-size: 12px; margin: 12px 0 0; min-height: 18px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 28px; border: 1px solid var(--ink); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; background: var(--bg); transition: background .15s, color .15s, opacity .15s; }
+  .btn:hover:not(:disabled) { background: var(--ink); color: #fff; }
+  .btn.solid { background: var(--ink); color: #fff; }
+  .btn.solid:hover:not(:disabled) { background: #333; }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .btn.wide { min-width: 260px; }
+
+  /* ---------- look grid ---------- */
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; margin-top: 36px; }
+  .grid.six { grid-template-columns: repeat(6, 1fr); }
+  .card { position: relative; min-width: 0; }
+  .card .photo { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; background: var(--wash); }
+  .card .pill { position: absolute; top: 12px; left: 12px; background: var(--badge); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .1em; padding: 4px 9px; border-radius: 999px; }
+  .card .pill.dark { background: var(--ink); }
+  .card .meta { display: flex; justify-content: space-between; gap: 10px; padding: 12px 14px 20px; }
+  .card .kind { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .card .name { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-top: 2px; }
+  .card .colour { font-size: 12px; color: var(--muted); }
+  .like { width: 32px; height: 32px; flex: none; display: grid; place-items: center; margin: -4px -6px 0 0; }
+  .like svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+  .like[aria-pressed="true"] svg { fill: var(--badge); stroke: var(--badge); }
+
+  .skeleton .photo, .skeleton .bar { background: linear-gradient(100deg, #f1f1f1 30%, #fafafa 50%, #f1f1f1 70%); background-size: 300% 100%; animation: shimmer 1.3s linear infinite; }
+  .skeleton .bar { height: 10px; border-radius: 5px; margin-top: 8px; }
+  @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+
+  .note { max-width: 640px; margin: 28px auto 0; padding: 0 20px; text-align: center; font-size: 16px; line-height: 1.65; }
+  .note-meta { text-align: center; color: var(--muted); font-size: 12px; margin: 12px 0 0; padding: 0 20px; }
+  .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 30px; padding: 0 20px; }
+
+  .empty { text-align: center; padding: 30px 20px 0; }
+
+  /* ---------- about + footer ---------- */
+  .about { border-top: 1px solid var(--line); padding: 64px 20px; }
+  .about h2 { font-size: 26px; font-weight: 800; text-transform: uppercase; text-align: center; margin: 0 0 34px; }
+  .steps { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; list-style: none; padding: 0; }
+  .steps b { display: block; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 6px; }
+  .steps .n { font-family: var(--serif); font-size: 34px; font-weight: 800; line-height: 1; display: block; margin-bottom: 12px; }
+  .steps p { margin: 0; color: #555; }
+  footer { border-top: 1px solid var(--line); padding: 28px 20px 40px; text-align: center; font-size: 12px; color: var(--muted); }
+  footer p { margin: 4px 0; }
+  footer .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+
+  /* ---------- saved looks drawer ---------- */
+  .side-tab { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 15; background: var(--ink); color: #fff; writing-mode: vertical-rl; font-size: 10px; font-weight: 700; letter-spacing: .18em; padding: 16px 9px; }
+  .scrim { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, .4); opacity: 0; pointer-events: none; transition: opacity .25s; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 31; width: min(440px, 100vw); background: var(--bg); transform: translateX(100%); visibility: hidden; transition: transform .28s ease, visibility .28s; display: flex; flex-direction: column; }
+  .drawer.open { transform: none; visibility: visible; }
+  .drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+  .drawer-head h2 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+  .drawer-body .msg { color: var(--muted); text-align: center; padding: 40px 10px; }
+  .drawer-body .msg .btn { margin-top: 18px; }
+  .saved-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 12px; }
+  .saved { text-align: left; }
+  .saved .collage { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; }
+  .saved .collage img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; background: var(--wash); }
+  .saved .name { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-top: 8px; }
+  .saved .when { font-size: 11px; color: var(--muted); }
+  .saved:hover .name { text-decoration: underline; }
+
+  /* ---------- toast ---------- */
+  .toast { position: fixed; left: 50%; bottom: 24px; z-index: 40; transform: translate(-50%, 20px); width: min(460px, calc(100vw - 24px)); background: var(--ink); color: #fff; padding: 16px 44px 16px 18px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .toast.error { background: #8f1d1b; }
+  .toast .title { font-weight: 700; }
+  .toast .body { font-size: 13px; opacity: .85; }
+  .toast .row { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 10px; }
+  .toast .row:empty { display: none; }
+  .toast .row a, .toast .row button { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+  .toast .close { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; font-size: 18px; line-height: 1; color: #fff; }
+  .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -1px; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 1280px) {
+    .grid.six { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width: 860px) {
+    .header { grid-template-columns: 1fr auto; grid-template-areas: "mark tools" "nav nav"; padding: 12px 16px 0; row-gap: 8px; }
+    .wordmark { grid-area: mark; font-size: 24px; }
+    .tools { grid-area: tools; }
+    .nav { grid-area: nav; justify-content: center; gap: 22px; border-top: 1px solid var(--line); margin: 0 -16px; padding: 4px 16px; }
+    .nav button { padding: 8px 0; font-size: 12px; }
+    .wallet-btn .label.long { display: none; }
+    .view { padding: 40px 0 56px; }
+    .grid, .grid.six { grid-template-columns: repeat(2, 1fr); }
+    .hero { height: 68vh; }
+    .mood fieldset { grid-template-columns: 1fr; gap: 10px; }
+    .mood legend { width: 100%; padding: 0; }
+    .chips { clear: both; }
+    .steps { grid-template-columns: 1fr; gap: 26px; text-align: center; }
+    .btn.wide { width: 100%; }
+    .side-tab { padding: 12px 6px; }
+  }
+  @media (max-width: 480px) {
+    #globe { display: none; }
+    .wordmark { font-size: 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <nav class="nav" aria-label="Main">
+    <button type="button" id="nav-mood" aria-current="page">Pick a Mood</button>
+    <button type="button" id="nav-saved">Saved Looks</button>
+    <button type="button" id="nav-about">About</button>
+  </nav>
+  <a class="wordmark" href="./" id="wordmark">OutfitOracle</a>
+  <div class="tools">
+    <a class="icon-btn wallet-btn" id="wallet" href="#" role="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5v10a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-13a2 2 0 0 1 0-4h11v4"/><circle cx="16.5" cy="13.5" r="1" fill="currentColor"/></svg>
+      <span class="label" id="wallet-label">Connect</span>
+    </a>
+    <button class="icon-btn" type="button" id="heart" aria-label="Saved looks">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z"/></svg>
+    </button>
+    <a class="icon-btn" id="globe" href="#" target="_blank" rel="noopener" aria-label="View on the BOT Chain explorer" title="View on the BOT Chain explorer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.9 5.2 3.9 8.5s-1.3 6.1-3.9 8.5c-2.6-2.4-3.9-5.2-3.9-8.5S9.4 5.9 12 3.5Z"/></svg>
+    </a>
+  </div>
+</header>
+
+<div class="announce">✨ AI-STYLED LOOKS · SAVED ON BOT CHAIN</div>
+<div class="notice" id="notice" hidden></div>
+
+<main>
+  <!-- 1. Pick a mood -->
+  <section class="view" id="view-mood">
+    <div class="hero">
+      <img src="images/hero.jpg" alt="" fetchpriority="high">
+      <div class="hero-copy">
+        <h1 class="hero-title">Style me</h1>
+        <a class="hero-btn" href="#pick" id="hero-btn">Pick a mood</a>
+      </div>
+    </div>
+
+    <h2 class="section-title" id="pick">Pick a mood</h2>
+    <p class="page-sub">Tell the Oracle the occasion, the weather and your style. It styles a full look from the wardrobe.</p>
+    <form class="mood" id="mood">
+      <fieldset><legend>Occasion</legend><div class="chips" data-group="occasion"></div></fieldset>
+      <fieldset><legend>Weather</legend><div class="chips" data-group="weather"></div></fieldset>
+      <fieldset><legend>Style</legend><div class="chips" data-group="style"></div></fieldset>
+      <div class="mood-go">
+        <button class="btn solid wide" type="submit" id="ask" disabled>Ask the Oracle</button>
+        <p class="hint" id="ask-hint">Pick one of each to begin.</p>
+      </div>
+    </form>
+
+    <h2 class="section-title">The wardrobe</h2>
+    <p class="page-sub">Every look is styled from these 36 pieces.</p>
+    <div class="grid six" id="wardrobe"></div>
+  </section>
+
+  <!-- 2. Look result / shared look -->
+  <section class="view" id="view-look" hidden>
+    <h1 class="page-title" id="look-title">Your look</h1>
+    <div class="tag-line" id="look-tag"></div>
+    <div class="grid" id="look-grid"></div>
+    <p class="note" id="look-note"></p>
+    <p class="note-meta" id="look-meta"></p>
+    <div class="actions" id="look-actions"></div>
+  </section>
+
+  <!-- Unknown look / load error -->
+  <section class="view" id="view-missing" hidden>
+    <h1 class="page-title" id="missing-title">Look not found</h1>
+    <p class="page-sub" id="missing-sub"></p>
+    <div class="actions" id="missing-actions"></div>
+  </section>
+</main>
+
+<section class="about" id="about">
+  <h2>How the Oracle works</h2>
+  <ol class="steps">
+    <li><span class="n">1</span><b>Pick a mood</b><p>Choose an occasion, the weather and a style. That is all the Oracle needs.</p></li>
+    <li><span class="n">2</span><b>Get styled</b><p>AI picks a top, a bottom, shoes and an accessory from a curated wardrobe and tells you why they work together.</p></li>
+    <li><span class="n">3</span><b>Save it on-chain</b><p>Keep a favourite look on BOT Chain with MetaMask. Anyone with the link can open it, no wallet needed.</p></li>
+  </ol>
+</section>
+
+<footer>
+  <p id="foot-contract"></p>
+  <p>For fun and inspiration. No payments, no tokens, no personal data.</p>
+</footer>
+
+<button class="side-tab" type="button" id="side-tab">SAVED LOOKS</button>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Saved looks" aria-hidden="true">
+  <div class="drawer-head">
+    <h2>Saved looks</h2>
+    <button class="icon-btn" type="button" id="drawer-close" aria-label="Close">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <button class="close" type="button" id="toast-close" aria-label="Dismiss">×</button>
+  <div class="title" id="toast-title"></div>
+  <div class="body" id="toast-body"></div>
+  <div class="row" id="toast-row"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.5/ethers.umd.min.js" crossorigin="anonymous"></script>
+<script>
+(() => {
+  'use strict';
+
+  // ============================================================
+  // Config — the only values to edit after deploying.
+  // ============================================================
+  const CONFIG = {
+    // AI proxy base URL (the Cloudflare Worker in /worker), e.g. 'https://outfitoracle-style.you.workers.dev'.
+    // While empty, looks come from the built-in rule-based picker.
+    proxyUrl: '',
+    networks: {
+      mainnet: { chainId: 677, name: 'BOT Chain', rpc: 'https://rpc.botchain.ai', explorer: 'https://scan.botchain.ai', contract: '0x60212D0c456F2984De30Da507B6Bb0c9A13f0655' },
+      testnet: { chainId: 968, name: 'BOT Chain Testnet', rpc: 'https://rpc.bohr.life', explorer: 'https://scan.bohr.life', contract: '' },
+    },
+  };
+
+  const AI_TIMEOUT_MS = 8000;
+  const OCCASIONS = ['Work', 'Date', 'Brunch', 'Party', 'Travel', 'Campus'];
+  const WEATHERS = ['Hot', 'Rainy', 'Mild', 'Cool'];
+  const STYLES = ['Minimal', 'Romantic', 'Street', 'Vintage', 'Sporty'];
+  const GROUPS = { occasion: OCCASIONS, weather: WEATHERS, style: STYLES };
+  const TYPES = ['top', 'bottom', 'shoes', 'accessory'];
+  const OCCASION_PHRASE = ['a work day', 'date night', 'brunch', 'a party', 'a travel day', 'a day on campus'];
+  const WEATHER_PHRASE = ['in the heat', 'in the rain', 'in mild weather', 'in cool weather'];
+
+  const ABI = [
+    'function saveLook(uint8 occasion, uint8 weather, uint8 style, uint16[4] items) returns (uint256 id)',
+    'function getLook(uint256 id) view returns (tuple(address owner, uint8 occasion, uint8 weather, uint8 style, uint16[4] items, uint64 timestamp))',
+    'function looksOf(address owner) view returns (uint256[])',
+    'event LookSaved(uint256 indexed id, address indexed owner, uint16[4] items)',
+    'error InvalidOccasion()', 'error InvalidWeather()', 'error InvalidStyle()', 'error InvalidItem()', 'error LookNotFound()',
+  ];
+
+  const params = new URLSearchParams(location.search);
+  const netKey = params.get('net') === 'testnet' ? 'testnet' : 'mainnet';
+  const NET = { ...CONFIG.networks[netKey] };
+  const isLocal = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+  // On localhost, pick up an address deployed from deploy.html so it can be tried before editing CONFIG.
+  if (!NET.contract && isLocal) NET.contract = storage('oo.contract.' + NET.chainId) || '';
+  const PREVIEW = !NET.contract; // no contract yet: saves are simulated in this browser
+  const CHAIN_HEX = '0x' + NET.chainId.toString(16);
+
+  const eth = window.ethereum;
+  const state = { sel: { occasion: null, weather: null, style: null }, look: null, account: null, chainId: null, saving: false, request: 0 };
+  let catalog = [];
+  let byId = new Map();
+  let readContract = null;
+
+  // ============================================================
+  // Small helpers
+  // ============================================================
+  const $ = (id) => document.getElementById(id);
+  function h(tag, props = {}, ...children) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === 'class') el.className = v;
+      else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+      else if (v !== false && v != null) el.setAttribute(k, v === true ? '' : v);
+    }
+    el.append(...children.filter((c) => c != null && c !== false));
+    return el;
+  }
+  function storage(key, value) {
+    try {
+      if (value === undefined) return localStorage.getItem(key);
+      localStorage.setItem(key, value);
+    } catch { /* private mode: carry on without persistence */ }
+    return null;
+  }
+  const short = (addr) => addr.slice(0, 6) + '…' + addr.slice(-4);
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const pick = (list) => list[Math.floor(Math.random() * list.length)];
+  const fmtDate = (ts) => new Date(Number(ts) * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  const lookTitle = (l) => `${WEATHERS[l.weather]}-day ${OCCASIONS[l.occasion]}, ${STYLES[l.style]}`;
+  const shareUrl = (id) => `${location.origin}${location.pathname}?look=${id}${netKey === 'testnet' ? '&net=testnet' : ''}`;
+  const homeUrl = () => location.pathname + (netKey === 'testnet' ? '?net=testnet' : '');
+  async function copy(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = h('textarea', { style: 'position:fixed;opacity:0' });
+      ta.value = text;
+      document.body.append(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+    }
+  }
+
+  // ============================================================
+  // Toast
+  // ============================================================
+  let toastTimer;
+  function toast({ title, body = '', error = false, busy = false, links = [], actions = [], sticky = false }) {
+    clearTimeout(toastTimer);
+    $('toast').className = 'toast show' + (error ? ' error' : '');
+    $('toast-title').replaceChildren(busy ? h('span', { class: 'spin' }) : '', title);
+    $('toast-body').textContent = body;
+    $('toast-row').replaceChildren(
+      ...links.map((l) => h('a', { href: l.href, target: '_blank', rel: 'noopener' }, l.label)),
+      ...actions.map((a) => h('button', { type: 'button', onclick: a.run }, a.label)),
+    );
+    if (!sticky && !busy) toastTimer = setTimeout(hideToast, 6000);
+  }
+  function hideToast() { $('toast').classList.remove('show'); }
+
+  // ============================================================
+  // Look storage: BOT Chain, or this browser while in preview mode
+  // ============================================================
+  const previewLooks = () => JSON.parse(storage('oo.preview.looks') || '[]');
+  const normalise = (l) => ({
+    owner: l.owner, occasion: Number(l.occasion), weather: Number(l.weather), style: Number(l.style),
+    items: [...l.items].map(Number), timestamp: Number(l.timestamp),
+  });
+
+  // Returns the look, or null when the id does not exist. Throws when the chain can't be reached.
+  async function getLook(id) {
+    if (PREVIEW) return previewLooks()[id] || null;
+    try {
+      return normalise(await readContract.getLook(id));
+    } catch (e) {
+      if (e.code === 'CALL_EXCEPTION') return null;
+      throw e;
+    }
+  }
+  async function looksOf(owner) {
+    if (PREVIEW) return previewLooks().map((_, i) => i);
+    return (await readContract.looksOf(owner)).map(Number);
+  }
+
+  // ============================================================
+  // Wallet
+  // ============================================================
+  const onRightChain = () => state.chainId === NET.chainId;
+
+  function renderWallet() {
+    const btn = $('wallet');
+    const label = $('wallet-label');
+    btn.classList.remove('warn');
+    btn.removeAttribute('target');
+    btn.setAttribute('href', '#');
+    if (!eth) {
+      const mobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+      btn.href = mobile ? `https://metamask.app.link/dapp/${location.host}${location.pathname}${location.search}` : 'https://metamask.io/download/';
+      btn.target = '_blank';
+      btn.rel = 'noopener';
+      label.textContent = 'Install MetaMask';
+    } else if (!state.account) {
+      label.textContent = 'Connect';
+    } else if (!onRightChain()) {
+      btn.classList.add('warn');
+      label.textContent = 'Switch to BOT Chain';
+    } else {
+      label.replaceChildren(h('span', { class: 'dot' }), ' ', short(state.account));
+    }
+    btn.title = state.account ? `${state.account} · ${NET.name}` : '';
+  }
+
+  async function connect() {
+    const accounts = await eth.request({ method: 'eth_requestAccounts' });
+    state.account = accounts[0] ? ethers.getAddress(accounts[0]) : null;
+    state.chainId = Number(await eth.request({ method: 'eth_chainId' }));
+    renderWallet();
+    return state.account;
+  }
+
+  async function ensureChain() {
+    if (Number(await eth.request({ method: 'eth_chainId' })) !== NET.chainId) {
+      try {
+        await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_HEX }] });
+      } catch (e) {
+        const unknownChain = e.code === 4902 || e?.data?.originalError?.code === 4902 || /unrecognized chain/i.test(e.message || '');
+        if (!unknownChain) throw e;
+        await eth.request({
+          method: 'wallet_addEthereumChain',
+          params: [{ chainId: CHAIN_HEX, chainName: NET.name, nativeCurrency: { name: 'BOT', symbol: 'BOT', decimals: 18 }, rpcUrls: [NET.rpc], blockExplorerUrls: [NET.explorer] }],
+        });
+      }
+    }
+    state.chainId = Number(await eth.request({ method: 'eth_chainId' }));
+    renderWallet();
+    if (!onRightChain()) throw Object.assign(new Error('Wrong network'), { code: 'WRONG_NETWORK' });
+  }
+
+  const userRejected = (e) => e.code === 4001 || e.code === 'ACTION_REJECTED' || e?.info?.error?.code === 4001;
+
+  async function onWalletClick(event) {
+    if (!eth) return; // plain link to install MetaMask
+    event.preventDefault();
+    try {
+      if (!state.account) await connect();
+      await ensureChain();
+      if (drawerOpen()) renderSaved();
+    } catch (e) {
+      if (!userRejected(e)) toast({ title: 'Could not connect', body: 'Open MetaMask and try again.', error: true });
+    }
+  }
+
+  async function initWallet() {
+    renderWallet();
+    if (!eth) return;
+    eth.on?.('accountsChanged', (accounts) => {
+      state.account = accounts[0] ? ethers.getAddress(accounts[0]) : null;
+      renderWallet();
+      if (drawerOpen()) renderSaved();
+    });
+    eth.on?.('chainChanged', (chainId) => {
+      state.chainId = Number(chainId);
+      renderWallet();
+    });
+    try {
+      const accounts = await eth.request({ method: 'eth_accounts' });
+      state.account = accounts[0] ? ethers.getAddress(accounts[0]) : null;
+      state.chainId = Number(await eth.request({ method: 'eth_chainId' }));
+    } catch { /* stay disconnected */ }
+    renderWallet();
+  }
+
+  // ============================================================
+  // Styling: AI proxy first, rule-based picker as the safety net
+  // ============================================================
+  function validLook(data) {
+    if (!data || !Array.isArray(data.items) || data.items.length !== 4) return null;
+    if (typeof data.note !== 'string' || !data.note.trim()) return null;
+    const items = data.items.map((id) => byId.get(id));
+    if (items.some((it) => !it)) return null;
+    const ordered = TYPES.map((type) => items.find((it) => it.type === type));
+    if (ordered.some((it) => !it)) return null;
+    return { items: ordered.map((it) => it.id), note: data.note.trim().slice(0, 600) };
+  }
+
+  async function askAI(sel, avoid) {
+    if (!CONFIG.proxyUrl) return null;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), AI_TIMEOUT_MS);
+    try {
+      const res = await fetch(CONFIG.proxyUrl.replace(/\/+$/, '') + '/style', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: ctrl.signal,
+        body: JSON.stringify({
+          occasion: OCCASIONS[sel.occasion], weather: WEATHERS[sel.weather], style: STYLES[sel.style], avoid,
+          catalog: catalog.map(({ id, name, type, colour, styles, weather }) => ({ id, name, type, colour, styles, weather })),
+        }),
+      });
+      return res.ok ? validLook(await res.json()) : null;
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function classicPick(sel, avoid) {
+    const [occasion, weather, style] = [OCCASIONS[sel.occasion], WEATHERS[sel.weather], STYLES[sel.style]].map((s) => s.toLowerCase());
+    const items = TYPES.map((type) => {
+      const scored = catalog
+        .filter((it) => it.type === type)
+        .map((it) => ({ it, score: (it.weather.includes(weather) ? 4 : 0) + (it.styles.includes(style) ? 3 : 0) + (it.occasions.includes(occasion) ? 1 : 0) }))
+        .sort((a, b) => b.score - a.score);
+      const best = scored.filter((s) => s.score >= scored[0].score - 1);
+      const fresh = best.filter((s) => !avoid.includes(s.it.id));
+      return pick(fresh.length ? fresh : best).it;
+    });
+    const [top, bottom, shoes, accessory] = items.map((it) => `${it.colour.toLowerCase()} ${it.name.toLowerCase()}`);
+    const note = `Start with the ${top} and pair it with the ${bottom}. The ${shoes} keep it right for ${OCCASION_PHRASE[sel.occasion]} ${WEATHER_PHRASE[sel.weather]}. Finish with the ${accessory} for a ${style} touch.`;
+    return { items: items.map((it) => it.id), note };
+  }
+
+  async function askOracle() {
+    const sel = { ...state.sel };
+    const avoid = state.look ? state.look.items : [];
+    const request = ++state.request;
+    hideToast();
+    setUrl(homeUrl());
+    renderLoading(sel);
+    const [ai] = await Promise.all([askAI(sel, avoid), wait(700)]);
+    if (request !== state.request) return;
+    const result = ai || classicPick(sel, avoid);
+    state.look = { ...sel, ...result, source: ai ? 'ai' : 'classic', savedId: null };
+    renderResult();
+  }
+
+  // ============================================================
+  // Saving
+  // ============================================================
+  async function saveLook() {
+    const look = state.look;
+    if (!look || state.saving || look.savedId != null) return;
+    const retry = [{ label: 'Try again', run: saveLook }];
+
+    if (!PREVIEW && !eth) {
+      toast({ title: 'MetaMask needed', body: 'Saving a look on BOT Chain needs the MetaMask wallet.', links: [{ label: 'Install MetaMask', href: $('wallet').href }], sticky: true });
+      return;
+    }
+    state.saving = true;
+    renderActions();
+    try {
+      let id;
+      let txHash = null;
+      if (PREVIEW) {
+        const looks = previewLooks();
+        id = looks.push({ owner: state.account || 'this browser', occasion: look.occasion, weather: look.weather, style: look.style, items: look.items, timestamp: Math.floor(Date.now() / 1000) }) - 1;
+        storage('oo.preview.looks', JSON.stringify(looks));
+      } else {
+        if (!state.account) {
+          toast({ title: 'Connect your wallet', body: 'Approve the connection in MetaMask to save this look.', busy: true });
+          await connect();
+        }
+        await ensureChain();
+        toast({ title: 'Confirm in MetaMask', body: `Saving ${lookTitle(look)} to ${NET.name}.`, busy: true });
+        const signer = await new ethers.BrowserProvider(eth).getSigner();
+        const contract = new ethers.Contract(NET.contract, ABI, signer);
+        const tx = await contract.saveLook(look.occasion, look.weather, look.style, look.items);
+        txHash = tx.hash;
+        toast({ title: 'Saving your look…', body: 'Waiting for BOT Chain to confirm.', busy: true, links: [{ label: 'View transaction', href: `${NET.explorer}/tx/${tx.hash}` }] });
+        const receipt = await tx.wait();
+        if (!receipt || receipt.status !== 1) throw new Error('Transaction reverted');
+        const saved = receipt.logs.map((log) => { try { return contract.interface.parseLog(log); } catch { return null; } }).find((log) => log?.name === 'LookSaved');
+        if (!saved) throw new Error('Saved, but the look id was not found in the receipt');
+        id = Number(saved.args.id);
+      }
+      if (state.look === look) look.savedId = id;
+      toast({
+        title: `Look #${id} saved`,
+        body: PREVIEW ? 'Preview mode: kept in this browser only.' : `Stored on ${NET.name}.`,
+        links: txHash ? [{ label: 'View transaction', href: `${NET.explorer}/tx/${txHash}` }] : [],
+        actions: [{ label: 'Copy share link', run: () => copyShare(id) }],
+        sticky: true,
+      });
+      if (drawerOpen()) renderSaved();
+    } catch (e) {
+      if (userRejected(e)) toast({ title: 'Request cancelled', body: 'Nothing was saved. You can try again whenever you like.', actions: retry, sticky: true });
+      else if (e.code === 'WRONG_NETWORK') toast({ title: 'Wrong network', body: `Switch MetaMask to ${NET.name} to save this look.`, error: true, actions: retry, sticky: true });
+      else if (e.code === 'INSUFFICIENT_FUNDS') toast({ title: 'Not enough BOT for gas', body: 'Top up your wallet with a little BOT and try again.', error: true, actions: retry, sticky: true });
+      else {
+        console.error(e);
+        toast({ title: 'Transaction failed', body: e.shortMessage || e.reason || 'Something went wrong while saving.', error: true, actions: retry, sticky: true });
+      }
+    } finally {
+      state.saving = false;
+      if (state.look === look) renderActions();
+    }
+  }
+
+  async function copyShare(id) {
+    await copy(shareUrl(id));
+    toast({ title: 'Share link copied', body: shareUrl(id) });
+  }
+
+  // ============================================================
+  // Rendering
+  // ============================================================
+  function show(view) {
+    for (const v of ['mood', 'look', 'missing']) $('view-' + v).hidden = v !== view;
+    if (view === 'mood') $('nav-mood').setAttribute('aria-current', 'page');
+    else $('nav-mood').removeAttribute('aria-current');
+    window.scrollTo({ top: 0 });
+  }
+  function setUrl(url) {
+    if (location.pathname + location.search !== url) history.pushState(null, '', url);
+  }
+
+  const likes = new Set(JSON.parse(storage('oo.likes') || '[]'));
+  function card(item, pill) {
+    if (!item) {
+      return h('article', { class: 'card' }, h('div', { class: 'photo' }), h('div', { class: 'meta' }, h('div', {}, h('div', { class: 'name' }, 'Retired item'), h('div', { class: 'colour' }, 'No longer in the wardrobe'))));
+    }
+    const like = h('button', { class: 'like', type: 'button', 'aria-label': `Like ${item.name}`, 'aria-pressed': String(likes.has(item.id)) });
+    like.innerHTML = '<svg viewBox="0 0 24 24" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z"/></svg>';
+    like.addEventListener('click', () => {
+      likes.has(item.id) ? likes.delete(item.id) : likes.add(item.id);
+      like.setAttribute('aria-pressed', String(likes.has(item.id)));
+      storage('oo.likes', JSON.stringify([...likes]));
+    });
+    return h('article', { class: 'card' },
+      h('img', { class: 'photo', src: item.image, alt: `${item.name}, ${item.colour}`, loading: 'lazy' }),
+      pill && h('span', { class: 'pill' + (pill.dark ? ' dark' : '') }, pill.text),
+      h('div', { class: 'meta' },
+        h('div', {}, h('div', { class: 'kind' }, item.type), h('div', { class: 'name' }, item.name), h('div', { class: 'colour' }, item.colour)),
+        like,
+      ),
+    );
+  }
+
+  function renderLoading(sel) {
+    show('look');
+    $('look-title').textContent = lookTitle(sel);
+    $('look-tag').replaceChildren();
+    $('look-grid').replaceChildren(...TYPES.map(() =>
+      h('article', { class: 'card skeleton', 'aria-hidden': 'true' }, h('div', { class: 'photo' }), h('div', { class: 'meta' }, h('div', { style: 'flex:1' }, h('div', { class: 'bar', style: 'width:70%' }), h('div', { class: 'bar', style: 'width:40%' })))),
+    ));
+    $('look-note').textContent = 'The Oracle is styling you…';
+    $('look-meta').textContent = '';
+    $('look-actions').replaceChildren();
+  }
+
+  function renderResult() {
+    const look = state.look;
+    show('look');
+    $('look-title').textContent = lookTitle(look);
+    $('look-tag').replaceChildren(look.source === 'classic' ? h('span', { class: 'classic', title: 'Chosen by the built-in wardrobe rules' }, 'Classic pick') : '');
+    const pill = look.source === 'ai' ? { text: 'AI PICK' } : null;
+    $('look-grid').replaceChildren(...look.items.map((id) => card(byId.get(id), pill)));
+    $('look-note').textContent = look.note;
+    $('look-meta').textContent = '';
+    renderActions();
+  }
+
+  function renderActions() {
+    const look = state.look;
+    if (!look) return;
+    const saved = look.savedId != null;
+    $('look-actions').replaceChildren(
+      h('button', { class: 'btn', type: 'button', onclick: askOracle, disabled: state.saving }, 'Restyle'),
+      saved
+        ? h('button', { class: 'btn solid', type: 'button', onclick: () => copyShare(look.savedId) }, `♥ Saved · Copy link to look #${look.savedId}`)
+        : h('button', { class: 'btn solid', type: 'button', onclick: saveLook, disabled: state.saving }, state.saving ? h('span', { class: 'spin' }) : '♡ ', state.saving ? 'Saving…' : 'Save look'),
+      h('button', { class: 'btn', type: 'button', onclick: goHome, disabled: state.saving }, 'Change mood'),
+    );
+  }
+
+  function renderMissing(title, sub, retry) {
+    show('missing');
+    $('missing-title').textContent = title;
+    $('missing-sub').textContent = sub;
+    $('missing-actions').replaceChildren(
+      ...(retry ? [h('button', { class: 'btn', type: 'button', onclick: retry }, 'Try again')] : []),
+      h('button', { class: 'btn solid', type: 'button', onclick: goHome }, 'Style a new look'),
+    );
+  }
+
+  async function renderShared(raw) {
+    const request = ++state.request;
+    hideToast();
+    state.look = null;
+    if (!/^\d{1,12}$/.test(raw)) return renderMissing('Look not found', 'That link does not point to a saved look.');
+    const id = Number(raw);
+    show('look');
+    $('look-title').textContent = `Look #${id}`;
+    $('look-tag').replaceChildren();
+    $('look-grid').replaceChildren(...TYPES.map(() => h('article', { class: 'card skeleton', 'aria-hidden': 'true' }, h('div', { class: 'photo' }), h('div', { class: 'meta' }))));
+    $('look-note').textContent = PREVIEW ? 'Loading look…' : `Loading from ${NET.name}…`;
+    $('look-meta').textContent = '';
+    $('look-actions').replaceChildren();
+
+    let look;
+    try {
+      look = await getLook(id);
+    } catch (e) {
+      console.error(e);
+      if (request === state.request) renderMissing('Could not load look', `${NET.name} did not answer. Check your connection and try again.`, () => renderShared(raw));
+      return;
+    }
+    if (request !== state.request) return;
+    if (!look) return renderMissing('Look not found', `There is no look #${id} ${PREVIEW ? 'saved in this browser' : 'on ' + NET.name} yet.`);
+
+    $('look-title').textContent = lookTitle(look);
+    $('look-tag').replaceChildren(h('span', { class: 'classic' }, `Look #${id}`));
+    $('look-grid').replaceChildren(...look.items.map((itemId) => card(byId.get(itemId), { text: 'SAVED', dark: true })));
+    const article = /^[aeiou]/i.test(STYLES[look.style]) ? 'An' : 'A';
+    $('look-note').textContent = `${article} ${STYLES[look.style].toLowerCase()} look for ${OCCASION_PHRASE[look.occasion]} ${WEATHER_PHRASE[look.weather]}, styled by the Oracle.`;
+    const owner = ethers.isAddress(look.owner)
+      ? h('a', { href: PREVIEW ? '#' : `${NET.explorer}/address/${look.owner}`, target: '_blank', rel: 'noopener' }, short(look.owner))
+      : look.owner;
+    $('look-meta').replaceChildren('Saved by ', owner, ` on ${fmtDate(look.timestamp)}`, PREVIEW ? ' · preview mode' : ` · ${NET.name}`);
+    $('look-actions').replaceChildren(
+      h('button', { class: 'btn', type: 'button', onclick: () => copyShare(id) }, 'Copy share link'),
+      h('button', { class: 'btn solid', type: 'button', onclick: goHome }, 'Style my own look'),
+    );
+  }
+
+  function goHome() {
+    state.request++;
+    setUrl(homeUrl());
+    show('mood');
+  }
+
+  function route() {
+    const look = new URLSearchParams(location.search).get('look');
+    if (look !== null) renderShared(look);
+    else if (state.look) renderResult();
+    else show('mood');
+  }
+
+  // ---------- mood chips ----------
+  function renderChips() {
+    for (const group of document.querySelectorAll('.chips')) {
+      const key = group.dataset.group;
+      group.replaceChildren(...GROUPS[key].map((label, i) =>
+        h('button', { class: 'chip', type: 'button', 'aria-pressed': String(state.sel[key] === i), onclick: () => { state.sel[key] = i; renderChips(); } }, label),
+      ));
+    }
+    const missing = Object.keys(GROUPS).filter((key) => state.sel[key] === null);
+    $('ask').disabled = missing.length > 0 || !catalog.length;
+    $('ask-hint').textContent = missing.length === 3 ? 'Pick one of each to begin.' : missing.length ? `Now pick ${missing.join(' and ')}.` : '';
+  }
+
+  // ---------- saved looks drawer ----------
+  const drawerOpen = () => $('drawer').classList.contains('open');
+  function openDrawer() {
+    $('drawer').classList.add('open');
+    $('drawer').setAttribute('aria-hidden', 'false');
+    $('scrim').classList.add('open');
+    renderSaved();
+    $('drawer-close').focus();
+  }
+  function closeDrawer() {
+    $('drawer').classList.remove('open');
+    $('drawer').setAttribute('aria-hidden', 'true');
+    $('scrim').classList.remove('open');
+  }
+
+  let savedRequest = 0;
+  async function renderSaved() {
+    const body = $('drawer-body');
+    const request = ++savedRequest;
+    const msg = (text, button) => body.replaceChildren(h('div', { class: 'msg' }, h('div', {}, text), button));
+
+    if (!PREVIEW && !eth) return msg('Install MetaMask to save looks and see them here.', h('a', { class: 'btn', href: $('wallet').href, target: '_blank', rel: 'noopener' }, 'Install MetaMask'));
+    if (!PREVIEW && !state.account) return msg('Connect your wallet to see the looks you have saved.', h('button', { class: 'btn solid', type: 'button', onclick: onWalletClick }, 'Connect wallet'));
+
+    msg('Loading your looks…');
+    try {
+      const ids = (await looksOf(state.account)).reverse().slice(0, 40); // newest first
+      const looks = await Promise.all(ids.map((id) => getLook(id)));
+      if (request !== savedRequest) return;
+      if (!ids.length) return msg('No saved looks yet. Style one and tap “Save look”.', h('button', { class: 'btn', type: 'button', onclick: () => { closeDrawer(); goHome(); } }, 'Pick a mood'));
+      body.replaceChildren(
+        h('div', { class: 'saved-grid' }, ...ids.map((id, i) => {
+          const look = looks[i];
+          if (!look) return null;
+          return h('button', { class: 'saved', type: 'button', onclick: () => { closeDrawer(); setUrl(shareUrl(id).replace(location.origin, '')); renderShared(String(id)); } },
+            h('div', { class: 'collage' }, ...look.items.map((itemId) => h('img', { src: byId.get(itemId)?.image || '', alt: '', loading: 'lazy' }))),
+            h('div', { class: 'name' }, lookTitle(look)),
+            h('div', { class: 'when' }, `Look #${id} · ${fmtDate(look.timestamp)}`),
+          );
+        })),
+      );
+    } catch (e) {
+      console.error(e);
+      if (request === savedRequest) msg(`Could not load your looks from ${NET.name}.`, h('button', { class: 'btn', type: 'button', onclick: renderSaved }, 'Try again'));
+    }
+  }
+
+  // ---------- static chrome ----------
+  function renderChrome() {
+    const where = `${NET.name}, chain ID ${NET.chainId}`;
+    if (PREVIEW) {
+      $('notice').hidden = false;
+      $('notice').replaceChildren('Preview mode · contract not deployed yet, so looks are saved in this browser only', ...(isLocal ? [' · ', h('a', { href: 'deploy.html' }, 'Deploy the contract')] : []));
+      $('foot-contract').textContent = `Contract: not deployed yet (${where})`;
+      $('globe').href = NET.explorer;
+    } else {
+      const url = `${NET.explorer}/address/${NET.contract}`;
+      $('foot-contract').replaceChildren('Contract: ', h('a', { class: 'mono', href: url, target: '_blank', rel: 'noopener' }, NET.contract), ` (${where})`);
+      $('globe').href = url;
+      if (netKey === 'testnet') {
+        $('notice').hidden = false;
+        $('notice').textContent = 'Testnet · looks saved here are for testing only';
+      }
+    }
+  }
+
+  // ============================================================
+  // Boot
+  // ============================================================
+  async function boot() {
+    renderChrome();
+    renderChips();
+    if (!PREVIEW) readContract = new ethers.Contract(NET.contract, ABI, new ethers.JsonRpcProvider(NET.rpc, NET.chainId, { staticNetwork: true }));
+
+    $('mood').addEventListener('submit', (e) => { e.preventDefault(); askOracle(); });
+    $('wallet').addEventListener('click', onWalletClick);
+    $('nav-mood').addEventListener('click', goHome);
+    $('wordmark').addEventListener('click', (e) => { e.preventDefault(); goHome(); });
+    $('hero-btn').addEventListener('click', (e) => { e.preventDefault(); $('pick').scrollIntoView(); });
+    $('nav-about').addEventListener('click', () => $('about').scrollIntoView());
+    for (const id of ['nav-saved', 'heart', 'side-tab']) $(id).addEventListener('click', openDrawer);
+    $('drawer-close').addEventListener('click', closeDrawer);
+    $('scrim').addEventListener('click', closeDrawer);
+    $('toast-close').addEventListener('click', hideToast);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+    window.addEventListener('popstate', route);
+
+    initWallet();
+    try {
+      const res = await fetch('catalog.json');
+      if (!res.ok) throw new Error(res.status);
+      catalog = await res.json();
+      byId = new Map(catalog.map((it) => [it.id, it]));
+    } catch (e) {
+      console.error(e);
+      return renderMissing('Wardrobe unavailable', 'The wardrobe could not be loaded. Refresh the page to try again.', () => location.reload());
+    }
+    $('wardrobe').replaceChildren(...catalog.map((it) => card(it)));
+    renderChips();
+    route();
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
