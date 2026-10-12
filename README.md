@@ -8,7 +8,7 @@ Tell the Oracle the occasion, the weather and your style. AI styles a full look 
 
 | | |
 |---|---|
-| Live site | _not published yet_ |
+| Live site | https://hello-vnt.github.io/Outfit-Oracle/ |
 | AI proxy | _not deployed yet_ |
 | Contract (BOT Chain mainnet, chain ID 677) | [`0x60212D0c456F2984De30Da507B6Bb0c9A13f0655`](https://scan.botchain.ai/address/0x60212D0c456F2984De30Da507B6Bb0c9A13f0655) |
 | Contract (testnet, chain ID 968) | _not deployed yet_ |
@@ -77,7 +77,7 @@ The Worker limits each IP to 20 requests per hour. By default the count is kept 
 
 ## 3. Publish the site
 
-Push the repository to GitHub and enable Pages for the default branch (root folder). For a custom domain, add it under Settings → Pages, which creates the `CNAME` file. Remember to add the final origin to `ALLOWED_ORIGINS` and redeploy the Worker.
+GitHub Pages serves the `gh-pages` branch, so publish with `git push origin main:gh-pages` after pushing `main` (or switch the Pages source to `main` under Settings → Pages). For a custom domain, add it under Settings → Pages, which creates the `CNAME` file. Remember to add the final origin to `ALLOWED_ORIGINS` and redeploy the Worker.
 
 ## How it works
 
