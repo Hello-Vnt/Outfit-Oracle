@@ -8,7 +8,7 @@ Tell the Oracle the occasion, the weather and your style. AI styles a full look 
 
 | | |
 |---|---|
-| Live site | https://hello-vnt.github.io/Outfit-Oracle/ |
+| Live site | https://www.outfitoracle.site/ |
 | AI proxy | _not deployed yet_ |
 | Contract (BOT Chain mainnet, chain ID 677) | [`0x60212D0c456F2984De30Da507B6Bb0c9A13f0655`](https://scan.botchain.ai/address/0x60212D0c456F2984De30Da507B6Bb0c9A13f0655) |
 | Contract (testnet, chain ID 968) | _not deployed yet_ |
