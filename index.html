@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>
+  // The certificate is valid, so always use the secure address (GitHub Pages serves http too unless "Enforce HTTPS" is ticked).
+  if (location.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) location.replace('https:' + location.href.slice(5));
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OutfitOracle — AI-styled looks, saved on BOT Chain</title>
 <meta name="description" content="Tell the Oracle the occasion, weather and your style. AI styles a full look from a curated wardrobe, and you save your favourites on BOT Chain.">
