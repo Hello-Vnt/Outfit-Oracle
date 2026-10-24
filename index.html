@@ -49,6 +49,12 @@
   .wallet-btn:hover { border-color: var(--ink); background: var(--ink); color: #fff; }
   .wallet-btn.warn { background: var(--badge); border-color: var(--badge); color: #fff; }
   .wallet-btn .label { display: inline-flex; align-items: center; gap: 6px; }
+  .wallet-wrap { position: relative; }
+  .wallet-menu { position: absolute; top: calc(100% + 8px); right: 0; z-index: 25; min-width: 220px; background: var(--bg); border: 1px solid var(--ink); display: flex; flex-direction: column; }
+  .wallet-menu .who { padding: 12px 14px; border-bottom: 1px solid var(--line); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--muted); word-break: break-all; }
+  .wallet-menu button, .wallet-menu a { text-align: left; padding: 11px 14px; font-size: 12px; font-weight: 600; text-decoration: none; }
+  .wallet-menu button:hover, .wallet-menu a:hover { background: var(--wash); }
+  .wallet-menu #wallet-disconnect { border-top: 1px solid var(--line); color: var(--badge); }
   .wallet-btn .dot { width: 7px; height: 7px; border-radius: 50%; background: #2eaf62; }
 
   .notice { background: var(--wash); border-bottom: 1px solid var(--line); text-align: center; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #555; padding: 8px 16px; }
@@ -200,10 +206,18 @@
   </nav>
   <a class="wordmark" href="./" id="wordmark">OutfitOracle</a>
   <div class="tools">
-    <a class="icon-btn wallet-btn" id="wallet" href="#" role="button">
+    <div class="wallet-wrap">
+    <a class="icon-btn wallet-btn" id="wallet" href="#" role="button" aria-haspopup="menu" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5v10a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-13a2 2 0 0 1 0-4h11v4"/><circle cx="16.5" cy="13.5" r="1" fill="currentColor"/></svg>
       <span class="label" id="wallet-label">Connect</span>
     </a>
+    <div class="wallet-menu" id="wallet-menu" role="menu" hidden>
+      <div class="who" id="wallet-who"></div>
+      <button type="button" role="menuitem" id="wallet-copy">Copy address</button>
+      <a role="menuitem" id="wallet-view" href="#" target="_blank" rel="noopener">View on explorer</a>
+      <button type="button" role="menuitem" id="wallet-disconnect">Disconnect</button>
+    </div>
+    </div>
     <button class="icon-btn" type="button" id="heart" aria-label="Saved looks">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z"/></svg>
     </button>
@@ -273,7 +287,7 @@
 
 <footer>
   <div class="col">
-    <a class="logo" href="https://scan.botchain.ai/" target="_blank" rel="noopener" aria-label="BOT Chain explorer"><img src="images/bot-chain.png" alt="BOT Chain" width="72" height="72" loading="lazy"></a>
+    <a class="logo" href="https://www.botchain.ai/en/" target="_blank" rel="noopener" aria-label="BOT Chain website"><img src="images/bot-chain.png" alt="BOT Chain" width="72" height="72" loading="lazy"></a>
     <span class="built">Built on</span>
   </div>
   <div class="col">
@@ -459,8 +473,20 @@
     btn.title = state.account ? `${state.account} · ${NET.name}` : '';
   }
 
+  // After a manual disconnect the site stays signed out until Connect is clicked again.
+  const signedOut = () => storage('oo.disconnected') === '1';
+
   async function connect() {
+    if (signedOut()) {
+      // Ask MetaMask to show its account picker again instead of reconnecting silently.
+      try {
+        await eth.request({ method: 'wallet_requestPermissions', params: [{ eth_accounts: {} }] });
+      } catch (e) {
+        if (userRejected(e)) throw e;
+      }
+    }
     const accounts = await eth.request({ method: 'eth_requestAccounts' });
+    storage('oo.disconnected', '0');
     state.account = accounts[0] ? ethers.getAddress(accounts[0]) : null;
     state.chainId = Number(await eth.request({ method: 'eth_chainId' }));
     renderWallet();
@@ -487,9 +513,31 @@
 
   const userRejected = (e) => e.code === 4001 || e.code === 'ACTION_REJECTED' || e?.info?.error?.code === 4001;
 
+  function toggleWalletMenu(open) {
+    $('wallet-menu').hidden = !open;
+    $('wallet').setAttribute('aria-expanded', String(open));
+    if (!open) return;
+    $('wallet-who').textContent = state.account;
+    $('wallet-view').href = `${NET.explorer}/address/${state.account}`;
+  }
+
+  async function disconnect() {
+    toggleWalletMenu(false);
+    storage('oo.disconnected', '1');
+    try {
+      // Removes this site's access inside MetaMask (no popup). Older wallets don't support it; the site still signs out.
+      await eth.request({ method: 'wallet_revokePermissions', params: [{ eth_accounts: {} }] });
+    } catch { /* not supported */ }
+    state.account = null;
+    renderWallet();
+    if (drawerOpen()) renderSaved();
+    toast({ title: 'Wallet disconnected', body: 'Click Connect to link MetaMask again.' });
+  }
+
   async function onWalletClick(event) {
     if (!eth) return; // plain link to install MetaMask
     event.preventDefault();
+    if (state.account && onRightChain()) return toggleWalletMenu($('wallet-menu').hidden);
     try {
       if (!state.account) await connect();
       await ensureChain();
@@ -503,7 +551,8 @@
     renderWallet();
     if (!eth) return;
     eth.on?.('accountsChanged', (accounts) => {
-      state.account = accounts[0] ? ethers.getAddress(accounts[0]) : null;
+      state.account = accounts[0] && !signedOut() ? ethers.getAddress(accounts[0]) : null;
+      toggleWalletMenu(false);
       renderWallet();
       if (drawerOpen()) renderSaved();
     });
@@ -512,7 +561,7 @@
       renderWallet();
     });
     try {
-      const accounts = await eth.request({ method: 'eth_accounts' });
+      const accounts = signedOut() ? [] : await eth.request({ method: 'eth_accounts' });
       state.account = accounts[0] ? ethers.getAddress(accounts[0]) : null;
       state.chainId = Number(await eth.request({ method: 'eth_chainId' }));
     } catch { /* stay disconnected */ }
@@ -873,6 +922,10 @@
 
     $('mood').addEventListener('submit', (e) => { e.preventDefault(); askOracle(); });
     $('wallet').addEventListener('click', onWalletClick);
+    $('wallet-disconnect').addEventListener('click', disconnect);
+    $('wallet-copy').addEventListener('click', async () => { toggleWalletMenu(false); await copy(state.account); toast({ title: 'Address copied', body: state.account }); });
+    $('wallet-view').addEventListener('click', () => toggleWalletMenu(false));
+    document.addEventListener('click', (e) => { if (!e.target.closest('.wallet-wrap')) toggleWalletMenu(false); });
     $('nav-mood').addEventListener('click', goHome);
     $('wordmark').addEventListener('click', (e) => { e.preventDefault(); goHome(); });
     $('hero-btn').addEventListener('click', (e) => { e.preventDefault(); $('pick').scrollIntoView(); });
@@ -881,7 +934,7 @@
     $('drawer-close').addEventListener('click', closeDrawer);
     $('scrim').addEventListener('click', closeDrawer);
     $('toast-close').addEventListener('click', hideToast);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDrawer(); toggleWalletMenu(false); } });
     window.addEventListener('popstate', route);
 
     initWallet();
